@@ -12,6 +12,8 @@ class ExpoSdk
     const INTERNAL_SERVER_ERROR = 500;
     const UNKNOWN_ERROR = 404;
     const NOT_REGISTERED_ERROR = 400;
+    const EXPO_API_URL = 'https://exp.host/--/api/v2/push/send';
+
 
     private $errors = [
         'INTERNAL_SERVER_ERROR' => self::INTERNAL_SERVER_ERROR,
@@ -24,8 +26,12 @@ class ExpoSdk
      */
     private $users;
 
+    /**
+     * @var RollingCurl
+     */
+    private $curl;
 
-    const EXPO_API_URL = 'https://exp.host/--/api/v2/push/send';
+
 
     /**
      * ExpoSdk constructor.
@@ -35,6 +41,43 @@ class ExpoSdk
     {
         $this->users = $userBag;
     }
+
+    /**
+     * @return array
+     */
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param array $errors
+     * @return ExpoSdk
+     */
+    public function setErrors($errors)
+    {
+        $this->errors = $errors;
+        return $this;
+    }
+
+    /**
+     * @return RollingCurl
+     */
+    public function getCurl()
+    {
+        return $this->curl;
+    }
+
+    /**
+     * @param RollingCurl $curl
+     * @return ExpoSdk
+     */
+    public function setCurl($curl)
+    {
+        $this->curl = $curl;
+        return $this;
+    }
+
 
     /**
      * @return ExpoUserBag
@@ -55,6 +98,10 @@ class ExpoSdk
     }
 
 
+    /**
+     * @param ExpoMessage $message
+     * @param callable $callback
+     */
     public function notify(ExpoMessage $message, callable $callback)
     {
         $userBag = $this->users;
@@ -67,18 +114,26 @@ class ExpoSdk
 
         $message = $message->toArray();
 
+        $curl = $this->getCurl() ?: new RollingCurl();
+
         if ($userBag->isChunked()) {
             foreach ($users as $user) {
-                $this->sendNotifications($user, $message, $callback);
+                $this->sendNotifications($user, $message, $callback, $curl);
             }
         } else {
-            $this->sendNotifications($users, $message, $callback);
+            $this->sendNotifications($users, $message, $callback, $curl);
         }
     }
 
-    private function sendNotifications(array $users, array $message, callable $callback)
+
+    /**
+     * @param array $users
+     * @param array $message
+     * @param callable $callback
+     * @param RollingCurl $rolling
+     */
+    private function sendNotifications(array $users, array $message, callable $callback,RollingCurl $rolling)
     {
-        $rolling = new RollingCurl();
 
         $bodyArray = array_map(function ($user) use ($message) {
             $message['to'] = $user;

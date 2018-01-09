@@ -1,0 +1,21 @@
+{
+    "name": "cable/expo-php-sdk",
+    "description": "Expo Notificiton Sender sdk",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "vahit",
+            "email": "vahit.serif119@gmail.com"
+        }
+    ],
+    "autoload": {
+      "psr-4":{
+          "Cable\\Expo\\": "./src/"
+      }
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "chuyskywalker/rolling-curl": "^3.1"
+    }
+}
